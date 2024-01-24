@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def read_coefficients_from_csv(filename: str) -> pd.DataFrame:
-    return pd.read_csv(filename)
+    return pd.read_csv(filename, index_col=0)
 
 
 def predict_share_from_coefficients(year: int, tan: float, bias: float) -> float:
@@ -10,7 +10,24 @@ def predict_share_from_coefficients(year: int, tan: float, bias: float) -> float
     return max(0., min(result, 100.))
 
 
-def main():
+def get_verb_form(year: int) -> str:
+    current_year = 2024
+    if year >= current_year:
+        return "will be"
+    return "was"
+
+
+def predict_unconditionally(year: int, entity: str) -> float:
+    coefficients = read_coefficients_from_csv("../output/coefficients.csv")
+
+    rows = coefficients.loc[coefficients["Entity"] == entity]
+    unconditional_res = predict_share_from_coefficients(year, rows["Tan"].iloc[0], rows["Bias"].iloc[0])
+    rounded_unconditional_res = round(unconditional_res, 3)
+
+    return rounded_unconditional_res
+
+
+def launch_unconditionally_prediction():
     coefficients = read_coefficients_from_csv("../output/coefficients.csv")
     entities = coefficients["Entity"]
 
@@ -23,19 +40,59 @@ def main():
         return
     print("Input a year: ")
     chosen_year = int(input())
-    rows = coefficients.loc[coefficients["Entity"] == chosen_entity]
-    unconditional_res = predict_share_from_coefficients(chosen_year, rows["Tan"].iloc[0], rows["Bias"].iloc[0])
-    rounded_unconditional_res = '%.3f' % unconditional_res
-    current_year = 2024
-    if chosen_year >= current_year:
-        verb_form = "will be"
-    else:
-        verb_form = "was"
-    print("According to unconditional prediction, шn", chosen_year, "the share of recycled plastic in", chosen_entity,
-          verb_form,
-          rounded_unconditional_res, "%")
+
+    unconditionally_predicted_share = predict_unconditionally(chosen_year, chosen_entity)
+
+    print("According to unconditional prediction, in", chosen_year, "the share of recycled plastic in", chosen_entity,
+          get_verb_form(chosen_year),
+          unconditionally_predicted_share, "%")
+
+
+def predict_with_features(year: int, features: list[float], linear_regression_coefficients: pd.DataFrame) -> float:
+    tan: float = 0
+    bias: float = 0
+
+    tan_bias = linear_regression_coefficients.loc["Tangent"]["intercept"]
+    bias_bias = linear_regression_coefficients.loc["Bias"]["intercept"]
+
+    del linear_regression_coefficients["intercept"]
+
+    i = 0
+    for feature in features:
+        tan += feature * linear_regression_coefficients.loc["Tangent"][i]
+        bias += feature * linear_regression_coefficients.loc["Bias"][i]
+        i += 1
+
+    tan += tan_bias
+    bias += bias_bias
+
+    print(tan, bias)
+
+    predicted_share = tan * year + bias
+
+    return max(min(predicted_share, 100), 0)
+
+
+def launch_prediction_with_features():
+    linear_regression_coefficients = read_coefficients_from_csv("../output/linear_regression_coefficients.csv")
+    feature_values = []
+    for feature_name in linear_regression_coefficients.columns:
+        if feature_name == "intercept":
+            continue
+        print("Input", f"{feature_name}:")
+        feature_values.append(float(input()))
+
+    print("Input a year: ")
+    chosen_year = int(input())
+
+    print(predict_with_features(chosen_year, feature_values, linear_regression_coefficients))
+
+
+def main():
+    launch_unconditionally_prediction()
+    launch_prediction_with_features()
 
 
 if __name__ == "__main__":
-    while True:
-        main()
+    # while True:
+    main()
