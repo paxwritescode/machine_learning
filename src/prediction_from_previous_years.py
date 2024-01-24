@@ -11,29 +11,22 @@ def predict_share_from_coefficients(year: int, tan: float, bias: float) -> float
 
 
 def main():
-    entities = ['Americas (excl. USA)', 'Asia (excl. China and India)', 'China',
-                'Europe', 'India', 'Middle East & North Africa', 'Oceania',
-                'Sub-Saharan Africa', 'United States']
-    print("Choose an entity from following list: ")
+    coefficients = read_coefficients_from_csv("../output/coefficients.csv")
+    entities = coefficients["Entity"]
 
-    current_year = 2024
+    print("Choose an entity from the following list: ")
+    print(", ".join(entities))
 
-    for entity in entities:
-        if entity != "United States":
-            print(entity, end=", ")
-        else:
-            print(entity)
-
-    chosen_entity = input()
-    if chosen_entity not in entities:
+    chosen_entity = input().strip()
+    if chosen_entity not in list(entities):
         print("No such entity")
         return
     print("Input a year: ")
     chosen_year = int(input())
-    coefficients = read_coefficients_from_csv("../output/coefficients.csv")
     rows = coefficients.loc[coefficients["Entity"] == chosen_entity]
     unconditional_res = predict_share_from_coefficients(chosen_year, rows["Tan"].iloc[0], rows["Bias"].iloc[0])
     rounded_unconditional_res = '%.3f' % unconditional_res
+    current_year = 2024
     if chosen_year >= current_year:
         verb_form = "will be"
     else:
@@ -44,4 +37,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    while True:
+        main()
