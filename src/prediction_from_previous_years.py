@@ -43,7 +43,7 @@ def launch_unconditionally_prediction():
 
     unconditionally_predicted_share = predict_unconditionally(chosen_year, chosen_entity)
 
-    print("According to unconditional prediction, in", chosen_year, "the share of recycled plastic in", chosen_entity,
+    print("According to unconditional prediction, in", chosen_year, "the share of plastic recycled in", chosen_entity,
           get_verb_form(chosen_year),
           unconditionally_predicted_share, "%")
 
@@ -66,7 +66,7 @@ def predict_with_features(year: int, features: list[float], linear_regression_co
     tan += tan_bias
     bias += bias_bias
 
-    print(tan, bias)
+    print("tan = ", tan, ", " "bias = ", bias)
 
     predicted_share = tan * year + bias
 
@@ -85,11 +85,13 @@ def launch_prediction_with_features():
     print("Input a year: ")
     chosen_year = int(input())
 
-    print(predict_with_features(chosen_year, feature_values, linear_regression_coefficients))
+    print("According to prediction with features, in", chosen_year, "the share of plastic recycled",
+          get_verb_form(chosen_year),
+          predict_with_features(chosen_year, feature_values, linear_regression_coefficients), "%")
 
 
 def main():
-    launch_unconditionally_prediction()
+    # launch_unconditionally_prediction()
     launch_prediction_with_features()
 
 
