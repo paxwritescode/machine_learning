@@ -69,7 +69,7 @@ def predict_with_features(year: int, features: list[float], linear_regression_co
 
     print("tan = ", tan, ", " "bias = ", bias)
 
-    predicted_share = tan * year + bias
+    predicted_share = tan * (year - 2000) + bias
 
     return max(min(predicted_share, 100), 0)
 
