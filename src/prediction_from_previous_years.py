@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
+
 def read_coefficients_from_csv(filename: str) -> pd.DataFrame:
     return pd.read_csv(filename, index_col=0)
 
@@ -59,11 +60,9 @@ def predict_with_features(year: int, features: list[float], linear_regression_co
 
     del linear_regression_coefficients["intercept"]
 
-    i = 0
-    for feature in features:
+    for i, feature in enumerate(features):
         tan += feature * linear_regression_coefficients.loc["Tangent"][i]
         bias += feature * linear_regression_coefficients.loc["Bias"][i]
-        i += 1
 
     tan += tan_bias
     bias += bias_bias
@@ -76,7 +75,11 @@ def predict_with_features(year: int, features: list[float], linear_regression_co
 
 
 def launch_prediction_with_features():
-    linear_regression_coefficients = read_coefficients_from_csv("../output/linear_regression_coefficients.csv")
+    coefficients_dir = Path("../output")
+    linear_regression_coefficients = read_coefficients_from_csv(
+        str(coefficients_dir / "linear_regression_coefficients.csv"))
+    features_mean_sd = read_coefficients_from_csv(str(coefficients_dir / "features_mean_sd.csv"))
+
     feature_values = []
     print("Input path to json file with coefficients: ")
     config_path = Path(input())
@@ -90,7 +93,10 @@ def launch_prediction_with_features():
             continue
         if feature_name not in config:
             raise ValueError(f"{feature_name} not in {config_path}")
-        feature_values.append(config[feature_name])
+        feature_value = config[feature_name]
+        feature_value -= features_mean_sd["mean"][feature_name]
+        feature_value /= features_mean_sd["sd"][feature_name]
+        feature_values.append(feature_value)
 
     year_key = "Year"
     if year_key not in config:
