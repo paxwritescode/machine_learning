@@ -1,5 +1,7 @@
-import pandas as pd
+import json
+from pathlib import Path
 
+import pandas as pd
 
 def read_coefficients_from_csv(filename: str) -> pd.DataFrame:
     return pd.read_csv(filename, index_col=0)
@@ -76,14 +78,24 @@ def predict_with_features(year: int, features: list[float], linear_regression_co
 def launch_prediction_with_features():
     linear_regression_coefficients = read_coefficients_from_csv("../output/linear_regression_coefficients.csv")
     feature_values = []
+    print("Input path to json file with coefficients: ")
+    config_path = Path(input())
+    if not config_path.exists():
+        raise FileNotFoundError(f"{config_path} does not exist")
+    with config_path.open() as config_file:
+        config = json.load(config_file)
+
     for feature_name in linear_regression_coefficients.columns:
         if feature_name == "intercept":
             continue
-        print("Input", f"{feature_name}:")
-        feature_values.append(float(input()))
+        if feature_name not in config:
+            raise ValueError(f"{feature_name} not in {config_path}")
+        feature_values.append(config[feature_name])
 
-    print("Input a year: ")
-    chosen_year = int(input())
+    year_key = "Year"
+    if year_key not in config:
+        raise ValueError(f"{year_key} not in {config_path}")
+    chosen_year = config[year_key]
 
     print("According to prediction with features, in", chosen_year, "the share of plastic recycled",
           get_verb_form(chosen_year),
