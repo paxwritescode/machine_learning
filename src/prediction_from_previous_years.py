@@ -60,7 +60,8 @@ def predict_with_features(year: int, features: list[float], linear_regression_co
 
     del linear_regression_coefficients["intercept"]
 
-    for i, feature in enumerate(features):
+    for i, feature in enumerate(
+            features):
         tan += feature * linear_regression_coefficients.loc["Tangent"][i]
         bias += feature * linear_regression_coefficients.loc["Bias"][i]
 
